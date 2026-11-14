@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sign in | SmartRoute AI</title>
+  <link rel="stylesheet" href="/static/portal.css">
+  <link rel="stylesheet" href="/static/login-access.css">
+</head>
+<body class="login-page">
+  <section class="login-story">
+    <a class="portal-brand" href="/login"><span class="portal-brand-mark">SR</span><span><strong>SmartRoute AI</strong><small>School mobility operations</small></span></a>
+    <div>
+      <p class="eyebrow">One connected transport system</p>
+      <h1>Every journey update reaches the right person.</h1>
+      <p>Drivers report what happens on the route. Administrators see the whole operation. Parents receive the status of their own child.</p>
+      <div class="role-flow"><div><b>1</b> Driver updates the trip</div><div><b>2</b> Backend validates and records the event</div><div><b>3</b> Admin and linked parent portals refresh</div></div>
+    </div>
+    <p class="login-note">Synthetic demonstration accounts and transport data only.</p>
+  </section>
+  <main class="login-panel">
+    <div class="login-box">
+      <p class="eyebrow">Secure role access</p>
+      <h2>Welcome back</h2>
+      <p>Choose your portal and sign in with the account assigned to you.</p>
+      <div data-message hidden></div>
+      <form id="login-form" class="login-form">
+        <div class="role-picker" role="radiogroup" aria-label="Account role">
+          <label class="role-option"><input type="radio" name="role" value="driver" checked><span>Driver</span></label>
+          <label class="role-option"><input type="radio" name="role" value="admin"><span>Admin</span></label>
+          <label class="role-option"><input type="radio" name="role" value="parent"><span>Parent</span></label>
+        </div>
+        <div id="driver-account-field" class="field">
+          <label for="driver-account">Driver account</label>
+          <select id="driver-account" aria-describedby="driver-account-help"><option>Loading drivers…</option></select>
+          <small id="driver-account-help" class="field-help">Each driver opens only their assigned route.</small>
+        </div>
+        <div class="field"><label for="username">Email</label><input id="username" name="username" type="email" autocomplete="username" required></div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="password-control"><input id="password" name="password" type="password" autocomplete="current-password" required><button id="toggle-password" type="button" aria-pressed="false">Show</button></div>
+        </div>
+        <button class="button" type="submit">Sign in to portal</button>
+      </form>
+      <aside class="demo-box">
+        <strong>Demo accounts</strong>
+        <p>All driver emails use the same demo password. Admin and parent retain their own demo credentials.</p>
+        <div class="demo-accounts"><button type="button" data-demo="driver">Driver demo</button><button type="button" data-demo="admin">Admin demo</button><button type="button" data-demo="parent">Parent demo</button></div>
+      </aside>
+    </div>
+  </main>
+  <script src="/static/portal.js"></script>
+  <script src="/static/login.js"></script>
+</body>
+</html>
