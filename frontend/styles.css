@@ -45,13 +45,20 @@ main>nav>a:first-of-type:focus-visible{
   outline:3px solid rgba(216,184,106,.6);
   outline-offset:3px;
 }
-main{max-width:1050px;margin:48px auto}
+*{box-sizing:border-box}
+body{margin:0;overflow-wrap:anywhere}
+main{width:min(1050px,calc(100% - 32px));margin:48px auto}
+main>header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
 h1{margin-bottom:4px}
 section{display:flex;gap:16px;margin:28px 0}
+#cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));width:100%}
 article{background:white;border-radius:10px;padding:18px;min-width:150px;box-shadow:0 2px 10px #dfe6f2}
 article strong{display:block;font-size:28px;color:#2257a4}
 article span{text-transform:capitalize}
 table{background:white;border-collapse:collapse;width:100%}
+.allocation-table-wrap{max-width:100%;overflow-x:auto;border-radius:8px;background:white}
+.allocation-table-wrap table{min-width:780px}
+.allocation-table-wrap:focus-visible{outline:3px solid var(--ochre);outline-offset:3px}
 th,td{padding:12px;border-bottom:1px solid #e6ebf3;text-align:left}
 li{padding:7px}
 td small{display:block;color:#68758a}
@@ -86,7 +93,7 @@ dialog#analytics-modal::backdrop,dialog#modal::backdrop{background:#17203388}
 .bar-fill,.stacked-allocated{background:#2878a4}
 .stacked-unallocated{background:#dce3ed}
 .empty-chart{text-align:center;color:#68758a}
-@media(max-width:700px){main{margin:24px 12px}.chart-grid{grid-template-columns:1fr}}
+@media(max-width:700px){main{width:calc(100% - 24px);margin:24px 12px}.chart-grid{grid-template-columns:1fr}main>header>div:last-child{display:flex;gap:7px;flex-wrap:wrap}}
 
 /* Analytics page */
 .analytics-page{
