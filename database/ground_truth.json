@@ -1,0 +1,30 @@
+{
+  "seed": 20261022,
+  "issues": [
+    {
+      "type": "capacity_exceeded",
+      "entity": "ROUTE-2026-000001",
+      "expected": "reject_assignment"
+    },
+    {
+      "type": "incompatible_route",
+      "entity": "STU-000017",
+      "expected": "reject_assignment"
+    },
+    {
+      "type": "impossible_travel_time",
+      "entity": "ROUTE-2026-000002",
+      "expected": "route_invalid"
+    },
+    {
+      "type": "invalid_notification_contact",
+      "entity": "GDN-999999",
+      "expected": "do_not_send"
+    },
+    {
+      "type": "unapproved_address_exposed",
+      "entity": "ZONE-999",
+      "expected": "access_denied"
+    }
+  ]
+}
