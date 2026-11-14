@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SmartRoute AI | Analytics</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="analytics-page">
+  <a class="skip-link" href="#analytics-content">Skip to analytics</a>
+  <main id="analytics-content" class="analytics-shell">
+    <nav class="analytics-nav" aria-label="Analytics navigation">
+      <a class="brand" href="/" aria-label="SmartRoute AI dashboard">
+        <span class="brand-mark" aria-hidden="true">SR</span>
+        <span><strong>SmartRoute AI</strong><small>School mobility operations</small></span>
+      </a>
+      <a class="dashboard-link" href="/"><span aria-hidden="true">←</span> Operations dashboard</a>
+    </nav>
+
+    <header class="analytics-hero">
+      <div>
+        <p class="analytics-eyebrow">Decision intelligence</p>
+        <h1>Operations at a glance</h1>
+        <p class="analytics-lede">See service health, attendance, and capacity without reading through raw records.</p>
+      </div>
+      <button id="refresh-analytics" type="button"><span aria-hidden="true">↻</span> Refresh data</button>
+    </header>
+
+    <div id="analytics-status" class="analytics-status" role="status" aria-live="polite">Loading current operational data…</div>
+
+    <section aria-labelledby="health-title">
+      <div class="section-heading">
+        <div><p class="section-kicker">Today</p><h2 id="health-title">Service health</h2></div>
+        <p>Key signals for a quick operational check</p>
+      </div>
+      <div id="health-cards" class="health-grid" aria-label="Service health metrics"></div>
+      <div id="attention-panel" class="attention-panel" hidden></div>
+    </section>
+
+    <div class="analytics-layout">
+      <section class="analytics-panel" aria-labelledby="attendance-title">
+        <div class="section-heading compact">
+          <div><p class="section-kicker">Last 14 recorded days</p><h2 id="attendance-title">Attendance outcomes</h2></div>
+        </div>
+        <div class="attendance-overview">
+          <div id="attendance-donut" class="donut" role="img" aria-label="Attendance outcomes chart">
+            <div><strong id="boarded-rate">0%</strong><span>boarded</span></div>
+          </div>
+          <div id="attendance-legend" class="analytics-legend"></div>
+        </div>
+        <div id="trend-chart" class="trend-chart" aria-label="Attendance trend by day"></div>
+      </section>
+
+      <section class="analytics-panel" aria-labelledby="allocation-title">
+        <div class="section-heading compact">
+          <div><p class="section-kicker">Coverage</p><h2 id="allocation-title">Allocation by zone</h2></div>
+        </div>
+        <p class="panel-explainer">Each bar shows how many active students currently have a route assignment.</p>
+        <div id="zone-chart" class="insight-list"></div>
+      </section>
+    </div>
+
+    <section class="analytics-panel" aria-labelledby="capacity-title">
+      <div class="section-heading">
+        <div><p class="section-kicker">Fleet planning</p><h2 id="capacity-title">Route capacity</h2></div>
+        <div class="capacity-key" aria-label="Capacity status key"><span class="low">Low</span><span class="watch">Watch</span><span class="high">High</span></div>
+      </div>
+      <p class="panel-explainer">Routes are ordered by utilization. “High” means 90% or more of the available seats are occupied.</p>
+      <div id="route-list" class="route-list"></div>
+    </section>
+
+    <section class="definitions-panel" aria-labelledby="definitions-title">
+      <div><p class="section-kicker">Plain-language guide</p><h2 id="definitions-title">How to read these metrics</h2></div>
+      <dl>
+        <div><dt>Boarded rate</dt><dd>Students recorded as boarded, divided by all recorded attendance events.</dd></div>
+        <div><dt>Allocation coverage</dt><dd>Active students with a current route assignment.</dd></div>
+        <div><dt>Route utilization</dt><dd>Assigned students divided by the bus seat capacity for that route.</dd></div>
+      </dl>
+    </section>
+  </main>
+  <script src="/static/analytics.js"></script>
+</body>
+</html>
