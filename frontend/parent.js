@@ -19,7 +19,10 @@ async function loadParent() {
     if (data.location) {
       location.innerHTML = `<div><strong>Bus location received</strong><span>${data.location.latitude.toFixed(5)}, ${data.location.longitude.toFixed(5)}</span><span>Accuracy: ${data.location.accuracy_meters ? `${Math.round(data.location.accuracy_meters)} m` : 'not supplied'}</span></div>`;
       document.getElementById('parent-location-time').textContent = Portal.time(data.location.recorded_at);
-    } else location.innerHTML = '<div><strong>No live location yet</strong><span>The location appears after the driver starts the trip and shares GPS.</span></div>';
+    } else {
+      location.innerHTML = '<div><strong>No live location yet</strong><span>The location appears after the driver starts the trip and shares GPS.</span></div>';
+      document.getElementById('parent-location-time').textContent = 'Not reported';
+    }
     document.getElementById('parent-events').innerHTML = data.events.map(event => `<article class="event-row ${event.event_type}"><i class="event-dot"></i><div><strong>${Portal.label(event.event_type)}</strong><small>${event.stop ? Portal.escape(event.stop) : Portal.escape(event.route_id)}${event.note ? ` · ${Portal.escape(event.note)}` : ''}</small></div><time>${Portal.time(event.created_at)}</time></article>`).join('') || '<p class="empty-state">No journey events have been reported yet.</p>';
     Portal.setMessage('', 'info');
   } catch (error) { Portal.setMessage(error.message, 'error'); }
