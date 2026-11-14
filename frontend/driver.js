@@ -16,6 +16,13 @@ function renderTripState(trip) {
   locationButton.disabled = !isRunning;
 }
 
+function renderStudentActions(student, tripIsRunning) {
+  const canBoard = tripIsRunning && student.status === 'waiting';
+  const canMarkAbsent = tripIsRunning && student.status === 'waiting';
+  const canDropOff = tripIsRunning && student.status === 'boarded';
+  return `<button data-student="${Portal.escape(student.id)}" data-event="boarded" ${canBoard ? '' : 'disabled'}>Boarded</button><button class="absent" data-student="${Portal.escape(student.id)}" data-event="absent" ${canMarkAbsent ? '' : 'disabled'}>Absent</button><button class="drop" data-student="${Portal.escape(student.id)}" data-event="dropped_off" ${canDropOff ? '' : 'disabled'}>Dropped off</button>`;
+}
+
 async function loadDriver() {
   try {
     driverData = await Portal.api('/api/v1/driver/dashboard');
@@ -27,12 +34,16 @@ async function loadDriver() {
       document.getElementById('latitude').value = location.latitude;
       document.getElementById('longitude').value = location.longitude;
       document.getElementById('location-time').textContent = Portal.time(location.recorded_at);
+    } else {
+      document.getElementById('latitude').value = '';
+      document.getElementById('longitude').value = '';
+      document.getElementById('location-time').textContent = 'Not reported';
     }
     document.getElementById('stop-list').innerHTML = stops.map(stop => `<div class="stop-row"><span class="stop-number">${stop.sequence}</span><span><strong>${Portal.escape(stop.name)}</strong><small>${Portal.escape(stop.id)}</small></span><small>${Portal.escape(stop.pickup_window)}</small></div>`).join('');
     const firstStop = stops[0], lastStop = stops[stops.length - 1];
     document.getElementById('route-endpoints').innerHTML = stops.length ? `<div><span>Start point</span><strong>${Portal.escape(firstStop.name)}</strong><small>${Portal.escape(firstStop.pickup_window)}</small></div><b aria-hidden="true">→</b><div><span>End point</span><strong>${Portal.escape(lastStop.name)}</strong><small>${Portal.escape(lastStop.pickup_window)}</small></div>` : '<p class="empty-state">No stops are configured for this route.</p>';
     document.getElementById('route-map').innerHTML = stops.map((stop, index) => `<div class="route-map-stop ${index === 0 ? 'start' : ''} ${index === stops.length - 1 ? 'end' : ''}"><i>${stop.sequence}</i><span><strong>${Portal.escape(stop.name)}</strong><small>${index === 0 ? 'Trip starts here' : index === stops.length - 1 ? 'Trip ends here' : 'Route stop'}</small></span></div>`).join('');
-    document.getElementById('student-list').innerHTML = students.map(student => `<tr><td><strong>${Portal.escape(student.name)}</strong><small>${Portal.escape(student.id)}</small></td><td>${Portal.escape(student.stop)}</td><td><span class="status-chip ${student.status}">${Portal.label(student.status)}</span></td><td><div class="student-actions"><button data-student="${Portal.escape(student.id)}" data-event="boarded" ${trip.status !== 'in_progress' ? 'disabled' : ''}>Boarded</button><button class="absent" data-student="${Portal.escape(student.id)}" data-event="absent" ${trip.status !== 'in_progress' ? 'disabled' : ''}>Absent</button><button class="drop" data-student="${Portal.escape(student.id)}" data-event="dropped_off" ${trip.status !== 'in_progress' ? 'disabled' : ''}>Dropped off</button></div></td></tr>`).join('') || '<tr><td colspan="4" class="empty-state">No students assigned.</td></tr>';
+    document.getElementById('student-list').innerHTML = students.map(student => `<tr><td><strong>${Portal.escape(student.name)}</strong><small>${Portal.escape(student.id)}</small></td><td>${Portal.escape(student.stop)}</td><td><span class="status-chip ${student.status}">${Portal.label(student.status)}</span></td><td><div class="student-actions">${renderStudentActions(student, trip.status === 'in_progress')}</div></td></tr>`).join('') || '<tr><td colspan="4" class="empty-state">No students assigned.</td></tr>';
   } catch (error) { Portal.setMessage(error.message, 'error'); }
 }
 async function tripAction(action) {
