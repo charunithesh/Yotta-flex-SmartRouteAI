@@ -8,8 +8,8 @@ from urllib.request import Request, urlopen
 BASE_URL = os.getenv("TEST_BASE_URL", "http://127.0.0.1:8011")
 
 
-def request(method, path, body=None, token=None):
-    headers = {}
+def request(method, path, body=None, token=None, extra_headers=None):
+    headers = dict(extra_headers or {})
     data = None
     if body is not None:
         data = json.dumps(body).encode()
@@ -36,9 +36,19 @@ class PortalRegressionTests(unittest.TestCase):
         self.assertEqual(status, 200, data)
         return data["token"]
 
+    def begin_fresh_trip(self, token):
+        status, dashboard = request("GET", "/api/v1/driver/dashboard", token=token)
+        self.assertEqual(status, 200, dashboard)
+        if dashboard["trip"]["status"] == "in_progress":
+            self.assertEqual(request("POST", "/api/v1/driver/trip", {"action": "complete"}, token)[0], 200)
+        status, started = request("POST", "/api/v1/driver/trip", {"action": "start"}, token)
+        self.assertEqual(status, 200, started)
+        self.assertEqual(started["status"], "in_progress")
+
     def test_01_health_and_existing_allocation_api(self):
         self.assertEqual(request("GET", "/api/v1/health"), (200, {"status": "ok"}))
-        status, overview = request("GET", "/api/v1/allocation/overview")
+        admin = self.login("admin", "admin@smartroute.local", "Admin@2026")
+        status, overview = request("GET", "/api/v1/allocation/overview", token=admin)
         self.assertEqual(status, 200)
         self.assertEqual(overview["eligible_students"], 100)
 
@@ -72,15 +82,19 @@ class PortalRegressionTests(unittest.TestCase):
         self.assertEqual(request("GET", "/api/v1/admin/operations", token=driver)[0], 403)
         self.assertEqual(request("GET", "/api/v1/driver/dashboard", token=parent)[0], 403)
         self.assertEqual(request("GET", "/api/v1/admin/operations", token=admin)[0], 200)
+        self.assertEqual(request("GET", "/api/v1/allocation/assignments")[0], 401)
+        self.assertEqual(request("GET", "/api/v1/analytics")[0], 401)
+        self.assertEqual(request("GET", "/api/v1/allocation/assignments", token=driver)[0], 403)
+        self.assertEqual(request("GET", "/api/v1/allocation/assignments", token=admin)[0], 200)
+        self.assertEqual(request("POST", "/api/v1/allocation/run", {}, extra_headers={"X-Role": "admin"})[0], 401)
+        self.assertEqual(request("POST", "/api/v1/allocation/run", {}, token=driver)[0], 403)
 
     def test_06_driver_admin_parent_flow_and_trip_restart(self):
         driver = self.login("driver", "driver1@smartroute.local", "Driver@2026")
         parent = self.login("parent", "parent1@smartroute.local", "Parent@2026")
         admin = self.login("admin", "admin@smartroute.local", "Admin@2026")
 
-        status, started = request("POST", "/api/v1/driver/trip", {"action": "start"}, driver)
-        self.assertEqual(status, 200, started)
-        self.assertEqual(started["status"], "in_progress")
+        self.begin_fresh_trip(driver)
         _, dashboard = request("GET", "/api/v1/driver/dashboard", token=driver)
         self.assertTrue(all(student["status"] == "waiting" for student in dashboard["students"]))
 
@@ -103,6 +117,11 @@ class PortalRegressionTests(unittest.TestCase):
         self.assertEqual(request("POST", "/api/v1/driver/trip", {"action": "start"}, driver)[0], 200)
         _, new_run = request("GET", "/api/v1/driver/dashboard", token=driver)
         self.assertTrue(all(student["status"] == "waiting" for student in new_run["students"]))
+        self.assertIsNone(new_run["location"])
+        _, restarted_parent = request("GET", "/api/v1/parent/dashboard", token=parent)
+        self.assertEqual(restarted_parent["status"], "trip_in_progress")
+        self.assertEqual(restarted_parent["events"], [])
+        self.assertIsNone(restarted_parent["location"])
 
     def test_07_logout_invalidates_session(self):
         token = self.login("driver", "driver3@smartroute.local", "Driver@2026")
@@ -111,6 +130,7 @@ class PortalRegressionTests(unittest.TestCase):
 
     def test_08_pages_have_safe_brand_navigation(self):
         cases = [
+            ("/", 'lang="en"', "allocation-table-wrap"),
             ("/login", 'href="/login"', "toggle-password"),
             ("/portal/driver", 'href="/portal/driver"', "route-map"),
             ("/portal/admin", 'href="/portal/admin"', "Route command board"),
@@ -139,6 +159,40 @@ class PortalRegressionTests(unittest.TestCase):
         self.assertIn("Trip started'", driver_js)
         self.assertIn("cursor:not-allowed", portal_css)
         self.assertIn(".is-loading{cursor:progress", portal_css)
+
+    def test_11_student_event_transitions_and_onboard_count(self):
+        driver = self.login("driver", "driver2@smartroute.local", "Driver@2026")
+        admin = self.login("admin", "admin@smartroute.local", "Admin@2026")
+        self.begin_fresh_trip(driver)
+        _, dashboard = request("GET", "/api/v1/driver/dashboard", token=driver)
+        student_id = dashboard["students"][0]["id"]
+
+        self.assertEqual(request("POST", "/api/v1/driver/student-event", {"student_id": student_id, "event_type": "dropped_off"}, driver)[0], 409)
+        self.assertEqual(request("POST", "/api/v1/driver/student-event", {"student_id": student_id, "event_type": "boarded"}, driver)[0], 200)
+        self.assertEqual(request("POST", "/api/v1/driver/student-event", {"student_id": student_id, "event_type": "boarded"}, driver)[0], 409)
+        _, active_admin = request("GET", "/api/v1/admin/operations", token=admin)
+        route = next(item for item in active_admin["routes"] if item["id"] == dashboard["route"]["id"])
+        self.assertEqual(route["students_on_bus"], 1)
+
+        self.assertEqual(request("POST", "/api/v1/driver/student-event", {"student_id": student_id, "event_type": "dropped_off"}, driver)[0], 200)
+        self.assertEqual(request("POST", "/api/v1/driver/student-event", {"student_id": student_id, "event_type": "boarded"}, driver)[0], 409)
+        _, completed_admin = request("GET", "/api/v1/admin/operations", token=admin)
+        route = next(item for item in completed_admin["routes"] if item["id"] == dashboard["route"]["id"])
+        self.assertEqual(route["students_on_bus"], 0)
+
+    def test_12_repeated_manual_assignment_uses_unique_ids(self):
+        admin = self.login("admin", "admin@smartroute.local", "Admin@2026")
+        payload = {
+            "student_id": "STU-000001",
+            "route_id": "ROUTE-2026-000001",
+            "stop_id": "STOP-000001",
+            "effective_from": "2026-11-14",
+        }
+        first_status, first = request("POST", "/api/v1/allocation/manual", payload, admin)
+        second_status, second = request("POST", "/api/v1/allocation/manual", payload, admin)
+        self.assertEqual(first_status, 200, first)
+        self.assertEqual(second_status, 200, second)
+        self.assertNotEqual(first["assignment_id"], second["assignment_id"])
 
 
 if __name__ == "__main__":
