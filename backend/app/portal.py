@@ -242,6 +242,17 @@ def _location_view(location: BusLocation | None) -> dict | None:
     }
 
 
+def _current_trip_location(db: Session, route_id: str, trip: Trip | None) -> BusLocation | None:
+    """Return only a location reported during the current trip run."""
+    if not trip or not trip.started_at:
+        return None
+    return db.scalar(
+        select(BusLocation)
+        .where(BusLocation.route_id == route_id, BusLocation.recorded_at >= trip.started_at)
+        .order_by(BusLocation.recorded_at.desc())
+    )
+
+
 def _event_view(db: Session, event: StudentTripEvent) -> dict:
     student = db.get(Student, event.student_id)
     stop = db.get(Stop, event.stop_id) if event.stop_id else None
@@ -284,10 +295,7 @@ def driver_dashboard(
         .where(Assignment.route_id == route.id, Assignment.status == "active")
         .order_by(Student.name)
     ).all()
-    latest_location = db.scalar(select(BusLocation).where(
-        BusLocation.route_id == route.id,
-        func.date(BusLocation.recorded_at) == date.today().isoformat(),
-    ).order_by(BusLocation.recorded_at.desc()))
+    latest_location = _current_trip_location(db, route.id, trip)
     event_query = select(StudentTripEvent).where(StudentTripEvent.trip_id == trip.id)
     if trip.started_at:
         event_query = event_query.where(StudentTripEvent.created_at >= trip.started_at)
@@ -378,10 +386,25 @@ def add_student_event(
     stop_id = payload.stop_id or assignment.stop_id
     if not db.scalar(select(RouteStop).where(RouteStop.route_id == route.id, RouteStop.stop_id == stop_id)):
         raise HTTPException(409, "The selected stop is not on this route")
-    latest_location = db.scalar(select(BusLocation).where(
-        BusLocation.route_id == route.id,
-        func.date(BusLocation.recorded_at) == date.today().isoformat(),
-    ).order_by(BusLocation.recorded_at.desc()))
+    latest_event = db.scalar(
+        select(StudentTripEvent)
+        .where(
+            StudentTripEvent.trip_id == trip.id,
+            StudentTripEvent.student_id == payload.student_id,
+            StudentTripEvent.created_at >= trip.started_at,
+        )
+        .order_by(StudentTripEvent.created_at.desc())
+    )
+    current_status = latest_event.event_type if latest_event else "waiting"
+    allowed_transitions = {
+        "waiting": {"boarded", "absent"},
+        "boarded": {"dropped_off"},
+        "absent": set(),
+        "dropped_off": set(),
+    }
+    if payload.event_type not in allowed_transitions[current_status]:
+        raise HTTPException(409, f"Cannot mark a {current_status} student as {payload.event_type.replace('_', ' ')}")
+    latest_location = _current_trip_location(db, route.id, trip)
     event = StudentTripEvent(
         trip_id=trip.id,
         student_id=payload.student_id,
@@ -420,24 +443,20 @@ def admin_operations(
     routes = []
     for route, bus, driver in route_rows:
         trip = db.scalar(select(Trip).where(Trip.route_id == route.id, Trip.service_date == date.today()))
-        location = db.scalar(select(BusLocation).where(
-            BusLocation.route_id == route.id,
-            func.date(BusLocation.recorded_at) == date.today().isoformat(),
-        ).order_by(BusLocation.recorded_at.desc()))
+        location = _current_trip_location(db, route.id, trip)
         assigned = db.scalar(select(func.count()).select_from(Assignment).where(Assignment.route_id == route.id, Assignment.status == "active")) or 0
         if trip and trip.started_at:
-            boarded_students = set(db.scalars(select(StudentTripEvent.student_id).where(
-                StudentTripEvent.route_id == route.id,
-                StudentTripEvent.event_type == "boarded",
-                StudentTripEvent.created_at >= trip.started_at,
-            )).all())
-            dropped_students = set(db.scalars(select(StudentTripEvent.student_id).where(
-                StudentTripEvent.route_id == route.id,
-                StudentTripEvent.event_type == "dropped_off",
-                StudentTripEvent.created_at >= trip.started_at,
-            )).all())
+            route_events = db.scalars(
+                select(StudentTripEvent)
+                .where(StudentTripEvent.route_id == route.id, StudentTripEvent.created_at >= trip.started_at)
+                .order_by(StudentTripEvent.created_at.desc())
+            ).all()
+            latest_by_student = {}
+            for event in route_events:
+                latest_by_student.setdefault(event.student_id, event.event_type)
+            students_on_bus = sum(1 for status in latest_by_student.values() if status == "boarded")
         else:
-            boarded_students, dropped_students = set(), set()
+            students_on_bus = 0
         routes.append({
             "id": route.id,
             "status": route.status,
@@ -446,7 +465,7 @@ def admin_operations(
             "driver": driver.name if driver else "Unassigned",
             "trip_status": trip.status if trip else "not_started",
             "assigned_students": assigned,
-            "students_on_bus": len(boarded_students - dropped_students),
+            "students_on_bus": students_on_bus,
             "location": _location_view(location),
         })
     recent = db.scalars(select(StudentTripEvent).order_by(StudentTripEvent.created_at.desc()).limit(30)).all()
@@ -483,13 +502,21 @@ def parent_dashboard(
     driver = db.get(Driver, route.driver_id) if route.driver_id else None
     stop = db.get(Stop, assignment.stop_id)
     trip = db.scalar(select(Trip).where(Trip.route_id == route.id, Trip.service_date == date.today()))
-    location = db.scalar(select(BusLocation).where(
-        BusLocation.route_id == route.id,
-        func.date(BusLocation.recorded_at) == date.today().isoformat(),
-    ).order_by(BusLocation.recorded_at.desc()))
-    events = db.scalars(select(StudentTripEvent).where(StudentTripEvent.student_id == student.id).order_by(StudentTripEvent.created_at.desc()).limit(20)).all()
-    current_events = [event for event in events if trip and trip.started_at and event.created_at >= trip.started_at]
-    latest = current_events[0] if current_events else None
+    location = _current_trip_location(db, route.id, trip)
+    if trip and trip.started_at:
+        events = db.scalars(
+            select(StudentTripEvent)
+            .where(
+                StudentTripEvent.trip_id == trip.id,
+                StudentTripEvent.student_id == student.id,
+                StudentTripEvent.created_at >= trip.started_at,
+            )
+            .order_by(StudentTripEvent.created_at.desc())
+            .limit(20)
+        ).all()
+    else:
+        events = []
+    latest = events[0] if events else None
     status = latest.event_type if latest else (
         "trip_in_progress" if trip and trip.status == "in_progress"
         else "trip_completed" if trip and trip.status == "completed"
