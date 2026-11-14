@@ -1,1 +1,31 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin portal | SmartRoute AI</title><link rel="stylesheet" href="/static/portal.css"></head><body><div class="portal-shell"><header class="portal-topbar"><a class="portal-brand" href="/portal/admin"><span class="portal-brand-mark">SR</span><span><strong>SmartRoute AI</strong><small>Admin operations</small></span></a><div class="account-menu"><div class="account-copy"><strong data-user-name>Admin</strong><small data-user-role>Admin</small></div><button class="ghost-button" type="button" onclick="Portal.logout()">Sign out</button></div></header><main class="portal-content"><div class="portal-heading"><div><p class="eyebrow">Admin control center</p><h1>Live transport operations</h1><p>See every active route, reported bus location, trip status, and student movement event in one place.</p></div><button id="refresh" class="ghost-button" type="button">Refresh now</button></div><div data-message hidden></div><section id="admin-kpis" class="kpi-grid" aria-label="Operations summary"></section><div class="portal-grid"><section class="portal-card"><div class="card-title"><div><h2>Route command board</h2><p>Live status across the fleet</p></div><span class="status-chip" id="last-refresh">Loading</span></div><div id="route-grid" class="route-grid"></div></section><section class="portal-card"><div class="card-title"><div><h2>Recent student events</h2><p>Updates submitted by drivers</p></div></div><div id="event-list" class="event-list"></div></section></div></main></div><script src="/static/portal.js"></script><script src="/static/admin.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin portal | SmartRoute AI</title>
+  <link rel="stylesheet" href="/static/portal.css">
+</head>
+<body>
+  <div class="portal-shell">
+    <header class="portal-topbar">
+      <a class="portal-brand" href="/portal/admin"><span class="portal-brand-mark">SR</span><span><strong>SmartRoute AI</strong><small>Admin operations</small></span></a>
+      <div class="account-menu"><div class="account-copy"><strong data-user-name>Admin</strong><small data-user-role>Admin</small></div><button class="ghost-button" type="button" onclick="Portal.logout()">Sign out</button></div>
+    </header>
+    <main class="portal-content">
+      <div class="portal-heading">
+        <div><p class="eyebrow">Admin control center</p><h1>Live transport operations</h1><p>See every active route, reported bus location, trip status, and student movement event in one place.</p></div>
+        <div class="portal-heading-actions"><a class="ghost-button portal-action-link" href="/">Allocations</a><a class="ghost-button portal-action-link" href="/analytics">Analytics</a><button id="refresh" class="ghost-button" type="button">Refresh now</button></div>
+      </div>
+      <div data-message hidden></div>
+      <section id="admin-kpis" class="kpi-grid" aria-label="Operations summary"></section>
+      <div class="portal-grid">
+        <section class="portal-card"><div class="card-title"><div><h2>Route command board</h2><p>Live status across the fleet</p></div><span class="status-chip" id="last-refresh">Loading</span></div><div id="route-grid" class="route-grid"></div></section>
+        <section class="portal-card"><div class="card-title"><div><h2>Recent student events</h2><p>Updates submitted by drivers</p></div></div><div id="event-list" class="event-list"></div></section>
+      </div>
+    </main>
+  </div>
+  <script src="/static/portal.js"></script>
+  <script src="/static/admin.js"></script>
+</body>
+</html>
