@@ -19,7 +19,7 @@ The instructions below were verified from a clean copy of this repository using:
 - The pinned packages in `backend/requirements.txt`
 - The starter seed database
 
-The clean verification generated 100 students with Indian names, 10 drivers, 10 buses, and 30 stops. Database validation passed and all 10 regression tests passed.
+The clean verification generated 100 students with Indian names, 10 drivers, 10 buses, and 30 stops. Database validation passed and all 12 regression tests passed.
 
 ## Project structure
 
@@ -192,12 +192,12 @@ Use these exact URLs:
 | Page | URL |
 |---|---|
 | Role login | <http://127.0.0.1:8010/login> |
-| Operations dashboard | <http://127.0.0.1:8010/> |
-| Analytics | <http://127.0.0.1:8010/analytics> |
+| Admin allocation dashboard | <http://127.0.0.1:8010/> |
+| Admin analytics | <http://127.0.0.1:8010/analytics> |
 | Interactive API documentation | <http://127.0.0.1:8010/docs> |
 | Health check | <http://127.0.0.1:8010/api/v1/health> |
 
-Sign in from the role login page. A successful login keeps the login page available and opens the selected portal in a new browser tab.
+Sign in from the role login page. A successful login keeps the login page available and opens the selected portal in a new browser tab. Allocation and analytics data require an authenticated Admin session; use the **Allocations** and **Analytics** links in the Admin portal.
 
 ## Demo accounts
 
@@ -265,12 +265,12 @@ python -m unittest discover -s backend\tests -v
 A successful run ends with:
 
 ```text
-Ran 10 tests
+Ran 12 tests
 
 OK
 ```
 
-The suite covers health checks, invalid login attempts, all 10 drivers, role authorization, driver/admin/parent event flow, trip completion and restart, logout, navigation links, frontend assets, and Start Trip feedback.
+The suite covers health checks, invalid login attempts, all 10 drivers, allocation and analytics authorization, spoofed-role rejection, driver/admin/parent event flow, current-run trip isolation, valid student-event transitions, onboard counts, repeat allocation IDs, trip completion and restart, logout, navigation links, frontend assets, and Start Trip feedback.
 
 ### Stop and clean up the test server
 
