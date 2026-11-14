@@ -1,15 +1,9 @@
-const role = {'X-Role': 'admin', 'Content-Type': 'application/json'};
 const el = selector => document.querySelector(selector);
 const colors = {boarded: '#2878d0', absent: '#f0a52b', missed_pickup: '#d95656'};
 const labels = {boarded: 'Boarded', absent: 'Absent', missed_pickup: 'Missed pickup'};
 
 async function api(url, options = {}) {
-  const response = await fetch(url, {...options, headers: {...role, ...options.headers}});
-  const body = await response.json();
-  if (!response.ok) {
-    throw Error(typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail));
-  }
-  return body;
+  return Portal.api(url, options);
 }
 
 function escapeHtml(value) {
@@ -197,4 +191,4 @@ async function history(id) {
 
 window.details = details;
 window.history = history;
-load();
+(async () => { if (await Portal.requireRole('admin')) await load(); })();
