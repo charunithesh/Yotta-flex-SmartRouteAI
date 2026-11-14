@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Driver portal | SmartRoute AI</title>
+  <link rel="stylesheet" href="/static/portal.css">
+  <link rel="stylesheet" href="/static/route-map.css">
+</head>
+<body>
+  <div class="portal-shell">
+    <header class="portal-topbar">
+      <a class="portal-brand" href="/portal/driver"><span class="portal-brand-mark">SR</span><span><strong>SmartRoute AI</strong><small>Driver console</small></span></a>
+      <div class="account-menu"><div class="account-copy"><strong data-user-name>Driver</strong><small data-user-role>Driver</small></div><button class="ghost-button" type="button" onclick="Portal.logout()">Sign out</button></div>
+    </header>
+    <main class="portal-content">
+      <div class="portal-heading"><div><p class="eyebrow">Driver trip console</p><h1>Today’s route</h1><p>Start the trip, share the bus location, and record each student’s pickup or drop-off status.</p></div></div>
+      <div data-message hidden></div>
+      <section class="portal-card">
+        <div class="card-title"><div><h2>Trip overview</h2><p id="trip-date">Loading assignment…</p></div><span id="trip-status" class="status-chip">Loading</span></div>
+        <div id="trip-overview" class="trip-overview"></div>
+        <div class="trip-actions"><button id="start-trip" class="button" type="button">Start trip</button><button id="complete-trip" class="danger-button" type="button">Complete trip</button></div>
+      </section>
+      <div class="portal-grid">
+        <div>
+          <section class="portal-card">
+            <div class="card-title"><div><h2>Live bus location</h2><p>Visible to administrators and linked parents</p></div><span id="location-time" class="status-chip">Not reported</span></div>
+            <form id="location-form" class="location-form"><div class="field"><label for="latitude">Latitude</label><input id="latitude" name="latitude" type="number" step="any" required></div><div class="field"><label for="longitude">Longitude</label><input id="longitude" name="longitude" type="number" step="any" required></div><button class="button" type="submit">Share location</button></form>
+            <div class="trip-actions"><button id="use-gps" class="ghost-button" type="button">Use device GPS</button></div>
+          </section>
+          <section class="portal-card">
+            <div class="card-title"><div><h2>Students on this route</h2><p>Every update is recorded and sent to the linked parent portal</p></div></div>
+            <div class="table-wrap"><table class="student-table"><thead><tr><th>Student</th><th>Pickup stop</th><th>Current status</th><th>Update</th></tr></thead><tbody id="student-list"></tbody></table></div>
+          </section>
+        </div>
+        <aside class="portal-card">
+          <div class="card-title"><div><h2>Route map</h2><p>Start point, ordered stops, and end point</p></div></div>
+          <div id="route-endpoints" class="route-endpoints"></div>
+          <div id="route-map" class="route-map" aria-label="Route stop sequence"></div>
+          <div class="card-title stop-details-title"><div><h2>Stop details</h2><p>Pickup windows in travel order</p></div></div>
+          <div id="stop-list" class="stop-list"></div>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <script src="/static/portal.js"></script>
+  <script src="/static/driver.js"></script>
+</body>
+</html>
