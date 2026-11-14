@@ -105,9 +105,7 @@ async function loadAnalytics() {
   status.className = 'analytics-status loading';
   status.textContent = 'Loading current operational data…';
   try {
-    const response = await fetch('/api/v1/analytics');
-    if (!response.ok) throw new Error(`Request failed (${response.status})`);
-    const data = await response.json();
+    const data = await Portal.api('/api/v1/analytics');
     renderHealth(data.summary);
     renderAttendance(data.attendance, data.attendance_trend, data.summary.boarded_rate);
     renderZones(data.zone_allocation);
@@ -124,4 +122,4 @@ async function loadAnalytics() {
 }
 
 byId('refresh-analytics').addEventListener('click', loadAnalytics);
-loadAnalytics();
+(async () => { if (await Portal.requireRole('admin')) await loadAnalytics(); })();
