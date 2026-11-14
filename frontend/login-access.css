@@ -1,0 +1,7 @@
+.field select{width:100%;min-height:44px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink)}
+.field-help{display:block;margin-top:5px;color:var(--muted);font-size:9px}
+.password-control{display:grid;grid-template-columns:1fr auto}
+.password-control input{border-radius:8px 0 0 8px!important}
+.password-control button{min-width:66px;border:1px solid var(--line);border-left:0;border-radius:0 8px 8px 0;background:var(--sage);color:var(--forest);font-size:10px;font-weight:800}
+.password-control button:hover{background:#ceddce}
+#driver-account-field[hidden]{display:none}
